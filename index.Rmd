@@ -20,8 +20,8 @@ summary(cars)
 
 You can also embed plots, for example:
 
-```{r label, out.width = "85%", fig.cap = "caption"}
-knitr::include_graphics("/Users/maullz/Desktop/Covid19CCT/docs/oxford_cases.pdf")
+```{r image-ref-for-in-text, echo = FALSE, message=FALSE, fig.align='center', fig.cap='Some cool caption', out.width='0.75\\linewidth', fig.pos='H'}
+knitr::include_graphics("https://github.com/AlexBowring/Covid19CCT/blob/master/docs/oxford_cases.pdf")
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
