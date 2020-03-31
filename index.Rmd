@@ -6,27 +6,20 @@ title: "Covid-19 Community Case Tracker"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## About
+While many sources are providing data about Covid-19 cases in the UK, it is not so easy to find comprehensive data about cases in specific counties. This website aims to provide visualisations of the Covid-19 data for the county you live in, so you can see if the response in your community is helping to flatten your county's curve. 
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
+## Oxfordshire
 
 You can also embed plots, for example:
 
 ```{r, echo = FALSE,  warning = FALSE}
 load("oxford_data.Rda")
-suppressWarnings(library(dplyr))
+library(dplyr, warn.conflict = FALSE)
 last_point <- df %>% # last trading day
   slice(which.max(dates))
-library(ggplot2, quietly=TRUE)
-library(bbplot, quietly=TRUE)
+library(ggplot2, warn.conflict = FALSE)
+library(bbplot, warn.conflict = FALSE)
 ggplot(df, aes(x = dates, y = oxford_cases)) +
 geom_line(colour = "#007f7f", size = 1) +
 geom_hline(yintercept = 0, size = 1, colour="#333333") +
@@ -37,6 +30,19 @@ geom_point(data = last_point, aes(x = dates, y = oxford_cases), col = "#007f7f",
 geom_text(data = last_point, aes(x = dates, y = oxford_cases, label = oxford_cases), size = 6, vjust = 2.0, nudge_x = 0.5) +
 bbc_style() +
 theme(plot.title = element_text(hjust = 0.5, size=20)) 
+
+ggplot(df, aes(x = dates, y = oxford_cases)) +
+geom_abline(intercept = 10, slope=2) +
+geom_line(colour = "#007f7f", size = 1) +
+geom_hline(yintercept = 0, size = 1, colour="#333333") +
+labs(x = "Date", y = "Oxfordshire Covid-19 Cases", title = "Oxfordshire Covid-19 Cases (Log)") +
+scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") + 
+scale_y_continuous(trans = 'log2') +
+theme(axis.text.x = element_text(angle = 90)) +
+geom_point(data = last_point, aes(x = dates, y = oxford_cases), col = "#007f7f", shape = 21, fill = "white", size = 2, stroke = 1.7) +
+geom_text(data = last_point, aes(x = dates, y = oxford_cases, label = oxford_cases), size = 6, vjust = 2.0, nudge_x = 0.5) +
+bbc_style() +
+theme(plot.title = element_text(hjust = 0.5, size=20)) 
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
