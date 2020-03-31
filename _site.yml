@@ -1,0 +1,5 @@
+name: "Covid-19 Community Case Tracker"
+output_dir: "docs"
+output:
+  html_document:
+   theme: cosmo
