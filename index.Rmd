@@ -20,8 +20,23 @@ summary(cars)
 
 You can also embed plots, for example:
 
-```{r image-ref-for-in-text, echo = FALSE, message=FALSE, fig.align='center', fig.cap='Some cool caption', out.width='0.75\\linewidth', fig.pos='H'}
-knitr::include_graphics("https://github.com/AlexBowring/Covid19CCT/blob/master/docs/oxford_cases.pdf")
+```{r, echo = FALSE,  warning = FALSE}
+load("oxford_data.Rda")
+suppressWarnings(library(dplyr))
+last_point <- df %>% # last trading day
+  slice(which.max(dates))
+library(ggplot2, quietly=TRUE)
+library(bbplot, quietly=TRUE)
+ggplot(df, aes(x = dates, y = oxford_cases)) +
+geom_line(colour = "#007f7f", size = 1) +
+geom_hline(yintercept = 0, size = 1, colour="#333333") +
+labs(x = "Date", y = "Oxfordshire Covid-19 Cases", title = "Oxfordshire Covid-19 Cases (Linear)") +
+scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") + 
+theme(axis.text.x = element_text(angle = 90)) +
+geom_point(data = last_point, aes(x = dates, y = oxford_cases), col = "#007f7f", shape = 21, fill = "white", size = 2, stroke = 1.7) +
+geom_text(data = last_point, aes(x = dates, y = oxford_cases, label = oxford_cases), size = 6, vjust = 2.0, nudge_x = 0.5) +
+bbc_style() +
+theme(plot.title = element_text(hjust = 0.5, size=20)) 
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
