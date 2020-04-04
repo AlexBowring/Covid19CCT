@@ -8,13 +8,13 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## About
-While many sources are providing national data on the UK coronavirus outbreak, these figures are largely driven by the huge amount of cases in major cities. In order to see the real impact of Covid-19 on your local community, **this application provides visualisations of the coronavirus data that has been made available for English and Scottish counties**. Over the coming months, these visualisations will help to track how your community's efforts are helping to flatten your county's specific Covid-19 curve.
+While many sources are providing national data on the UK coronavirus outbreak, these figures are largely driven by the huge amount of cases in major cities. In order to see the real impact of Covid-19 on your local community, **this application provides visualisations of the coronavirus data that has been made available for counties in England, Scotland and Wales.** Over the coming months, these visualisations will help to track how your community's efforts are helping to flatten your county's specific Covid-19 curve.
 
-All Covid-19 data for English counties has been sourced from the UK Department of Health and Social Care, and all data for Scottish counties has been sourced from the Scottish Government. 
+All Covid-19 data for English counties has been sourced from the UK Department of Health and Social Care, all data for Scottish counties has been sourced from the Scottish Government, and all data for Welsh counties has been sourced from Public Health Wales. 
 
-## England County Covid-19 Data (Scroll Down For Scotland)
+## England County Covid-19 Data (Scotland, Wales Below)
 
-As of April 1st 2020, this data is up-to-date with the official figures released by the UK Department of Health and Social Care.
+As of April 4th 2020, this data is up-to-date with the official figures released by the UK Department of Health and Social Care.
 
 Select your county from the drop-down menu:
 ```{r eruptions, echo=FALSE}
@@ -110,7 +110,7 @@ theme(plot.title = element_text(hjust = 0.5, size=20))
 
 ## Scotland County Covid-19 Data
 
-As of April 1st 2020, this data is up-to-date with the official figures released by the Scottish Government.
+As of April 4th 2020, this data is up-to-date with the official figures released by the Scottish Government.
 
 Select your region from the drop-down menu:
 ```{r scottish_eruptions, echo=FALSE}
@@ -191,6 +191,97 @@ ggplot(df, aes(x = dates, y = cases)) +
 geom_line(colour = "#007f7f", size = 1) +
 geom_hline(yintercept = 0, size = 1, colour="#333333") +
 labs(x = "Date", y = paste(input$region,  "Covid-19 Cases"), title = paste(input$region,  "Daily % Change (On Previous Day's Total)")) +
+scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") + 
+scale_y_continuous(labels = scales::percent) +
+theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
+bbc_style() +
+theme(plot.title = element_text(hjust = 0.5, size=20))
+})
+```
+
+## Wales County Covid-19 Data
+
+As of April 4th 2020, this data is up-to-date with the official figures released by Public Health Wales.
+
+Select your region from the drop-down menu:
+```{r welsh_eruptions, echo=FALSE}
+welsh_data <- read.csv("wales_covid_data.csv", row.names=1)
+welsh_counties <- sort(row.names(welsh_data))
+selectInput(
+  'welsh_region', label = 'County:',
+  choices = welsh_counties, selected = "Aneurin Bevan"
+)
+
+renderPlot({
+cases <- as.matrix(welsh_data)[input$welsh_region,]
+dates <- seq(as.Date("2000/03/20"), by = "days", length.out = length(welsh_data[input$welsh_region,]))
+df <- data.frame(dates,cases)
+last_point <- df %>% # most recent value
+  slice(which.max(dates))
+ggplot(df, aes(x = dates, y = cases)) +
+geom_line(colour = "#007f7f", size = 1) +
+geom_hline(yintercept = 0, size = 1, colour="#333333") +
+labs(x = "Date", y = paste(input$welsh_region,  "Covid-19 Cases"), title = paste(input$welsh_region,  "Total Covid-19 Cases (Linear Scale)")) +
+scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") + 
+theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
+geom_point(data = last_point, aes(x = dates, y = cases), col = "#007f7f", shape = 21, fill = "white", size = 2, stroke = 1.7) +
+geom_text(data = last_point, aes(x = dates, y = cases, label = cases), size = 6, vjust = 2.0, nudge_x = 0.5) +
+bbc_style() +
+theme(plot.title = element_text(hjust = 0.5, size=20))
+})
+renderPlot({
+cases <- as.matrix(welsh_data)[input$welsh_region,]
+dates <- seq(as.Date("2000/03/20"), by = "days", length.out = length(welsh_data[input$welsh_region,]))
+df <- data.frame(dates,cases)
+last_point <- df %>% # most recent value
+  slice(which.max(dates))
+ggplot(df, aes(x = dates, y = cases)) +
+geom_line(colour = "#007f7f", size = 1) +
+labs(x = "Date", y = paste(input$welsh_region,  "Covid-19 Cases"), title = paste(input$welsh_region,  "Total Covid-19 Cases (Logarithmic Scale)")) +
+scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") + 
+scale_y_continuous(trans = 'log2') +
+geom_hline(yintercept = 0, size = 2, colour="#333333") +
+theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
+geom_point(data = last_point, aes(x = dates, y = cases), col = "#007f7f", shape = 21, fill = "white", size = 2, stroke = 1.7) +
+geom_text(data = last_point, aes(x = dates, y = cases, label = cases), size = 6, vjust = 2.0, nudge_x = 0.5) +
+bbc_style() +
+theme(plot.title = element_text(hjust = 0.5, size=20))
+})
+renderPlot({
+A <- welsh_data[,-1]
+B <- welsh_data[,-length(welsh_data)]
+diff <- A-B
+cases <- as.matrix(diff)[input$welsh_region,]
+dates <- seq(as.Date("2000/03/21"), by = "days", length.out = length(cases))
+df <- data.frame(dates,cases)
+last_point <- df %>% # most recent value
+  slice(which.max(dates))
+ggplot(df, aes(x = dates, y = cases)) +
+geom_bar(stat="identity",colour = "white",fill="steelblue") +
+geom_hline(yintercept = 0, size = 1, colour="#333333") +
+labs(x = "Date", y = paste(input$welsh_region,  "Covid-19 Cases"), title = paste(input$welsh_region,  "Daily Covid-19 Cases")) +
+scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") + 
+theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
+bbc_style() +
+theme(plot.title = element_text(hjust = 0.5, size=20))
+})
+
+renderPlot({
+A <- welsh_data[,-1]
+B <- welsh_data[,-length(welsh_data)]
+diff <- A/B 
+diff[is.na(diff) | diff=="Inf"] <- 0
+diff <- diff - 1
+diff[diff==-1] <- 0
+cases <- as.matrix(diff)[input$welsh_region,]
+dates <- seq(as.Date("2000/03/21"), by = "days", length.out = length(cases))
+df <- data.frame(dates,cases)
+last_point <- df %>% # most recent value
+  slice(which.max(dates))
+ggplot(df, aes(x = dates, y = cases)) +
+geom_line(colour = "#007f7f", size = 1) +
+geom_hline(yintercept = 0, size = 1, colour="#333333") +
+labs(x = "Date", y = paste(input$welsh_region,  "Covid-19 Cases"), title = paste(input$welsh_region,  "Daily % Change (On Previous Day's Total)")) +
 scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") + 
 scale_y_continuous(labels = scales::percent) +
 theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
