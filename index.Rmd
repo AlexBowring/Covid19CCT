@@ -8,13 +8,13 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## About
-While many sources are providing national data on the UK coronavirus outbreak, these figures are largely driven by the huge amount of cases in major cities. In order to see the real impact of Covid-19 on your local community, **this application provides visualisations of the coronavirus data that has been made available for counties in England and Scotland, and health boards in Wales.** Over the coming months, these visualisations will help to track how your community's efforts are helping to flatten your county's specific Covid-19 curve.
+While many sources are providing national data on the UK coronavirus outbreak, these figures are largely driven by the huge amount of cases in major cities. In order to see the real impact of Covid-19 on your local community, **this application provides visualisations of the coronavirus data that has been made available for counties in England, and health boards in Scotland and Wales.** Over the coming months, these visualisations will help to track how your community's efforts are helping to flatten your county's specific Covid-19 curve.
 
 All Covid-19 data for English counties has been sourced from the UK Department of Health and Social Care, all data for Scottish counties has been sourced from the Scottish Government, and all data for Welsh counties has been sourced from Public Health Wales. 
 
 ## England County Covid-19 Data (Scotland, Wales Below)
 
-As of April 5th 2020, this data is up-to-date with the official figures released by the UK Department of Health and Social Care.
+As of April 7th 2020, this data is up-to-date with the official figures released by the UK Department of Health and Social Care.
 
 Select your county from the drop-down menu:
 ```{r eruptions, echo=FALSE}
@@ -108,16 +108,16 @@ theme(plot.title = element_text(hjust = 0.5, size=20))
 })
 ```
 
-## Scotland County Covid-19 Data
+## Scotland Health Board Covid-19 Data
 
-As of April 5th 2020, this data is up-to-date with the official figures released by the Scottish Government.
+As of April 7th 2020, this data is up-to-date with the official figures released by the Scottish Government.
 
-Select your county from the drop-down menu:
+Select your health board from the drop-down menu:
 ```{r scottish_eruptions, echo=FALSE}
 scottish_data <- read.csv("scotland_covid_data.csv", row.names=1)
 scottish_counties <- sort(row.names(scottish_data))
 selectInput(
-  'region', label = 'County:',
+  'region', label = 'Health Board:',
   choices = scottish_counties, selected = "Greater Glasgow and Clyde"
 )
 
@@ -199,9 +199,9 @@ theme(plot.title = element_text(hjust = 0.5, size=20))
 })
 ```
 
-## Wales County Covid-19 Data
+## Wales Health Board Covid-19 Data
 
-As of April 5th 2020, this data is up-to-date with the official figures released by Public Health Wales.
+As of April 7th 2020, this data is up-to-date with the official figures released by Public Health Wales.
 
 Select your health board from the drop-down menu:
 ```{r welsh_eruptions, echo=FALSE}
