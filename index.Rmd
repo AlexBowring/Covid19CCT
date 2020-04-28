@@ -14,7 +14,7 @@ All Covid-19 data for English counties has been sourced from the UK Department o
 
 ## England County Covid-19 Data (Scotland, Wales Below)
 
-As of April 7th 2020, this data is up-to-date with the official figures released by the UK Department of Health and Social Care.
+As of April 28th 2020, this data is up-to-date with the official figures released by the UK Department of Health and Social Care.
 
 Select your county from the drop-down menu:
 ```{r eruptions, echo=FALSE}
@@ -34,6 +34,7 @@ dates <- seq(as.Date("2000/03/09"), by = "days", length.out = length(data[input$
 df <- data.frame(dates,cases)
 last_point <- df %>% # most recent value
   slice(which.max(dates))
+ypos = max(cases) - 0.005*diff(range(cases))
 ggplot(df, aes(x = dates, y = cases)) +
 geom_line(colour = "#007f7f", size = 1) +
 geom_hline(yintercept = 0, size = 1, colour="#333333") +
@@ -42,6 +43,8 @@ scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") +
 theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
 geom_point(data = last_point, aes(x = dates, y = cases), col = "#007f7f", shape = 21, fill = "white", size = 2, stroke = 1.7) +
 geom_text(data = last_point, aes(x = dates, y = cases, label = cases), size = 6, vjust = 2.0, nudge_x = 0.5) +
+geom_vline(data=df, xintercept=as.numeric(dates[15]), linetype=2) +
+annotate(geom="label", x=dates[15], label="UK lockdown begins", y=ypos, fontface="italic", colour="grey10", hjust=1.03, vjust=1, size=5) +
 bbc_style() +
 theme(plot.title = element_text(hjust = 0.5, size=20))
 })
@@ -61,6 +64,7 @@ geom_hline(yintercept = 0, size = 2, colour="#333333") +
 theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
 geom_point(data = last_point, aes(x = dates, y = cases), col = "#007f7f", shape = 21, fill = "white", size = 2, stroke = 1.7) +
 geom_text(data = last_point, aes(x = dates, y = cases, label = cases), size = 6, vjust = 2.0, nudge_x = 0.5) +
+geom_vline(data=df, xintercept=as.numeric(dates[15]), linetype=2) +
 bbc_style() +
 theme(plot.title = element_text(hjust = 0.5, size=20))
 })
@@ -68,9 +72,10 @@ theme(plot.title = element_text(hjust = 0.5, size=20))
 renderPlot({
 A <- data[,-1]
 B <- data[,-length(data)]
-diff <- A-B
+zeros <- integer(length(counties))
+diff <- cbind(zeros, A-B)
 cases <- as.matrix(diff)[input$county,]
-dates <- seq(as.Date("2000/03/10"), by = "days", length.out = length(cases))
+dates <- seq(as.Date("2000/03/09"), by = "days", length.out = length(cases))
 df <- data.frame(dates,cases)
 last_point <- df %>% # most recent value
   slice(which.max(dates))
@@ -80,6 +85,7 @@ geom_hline(yintercept = 0, size = 1, colour="#333333") +
 labs(x = "Date", y = paste(input$county,  "Covid-19 Cases"), title = paste(input$county,  "Daily Covid-19 Cases")) +
 scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") + 
 theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
+geom_vline(data=df, xintercept=as.numeric(dates[15]), linetype=2) +
 bbc_style() +
 theme(plot.title = element_text(hjust = 0.5, size=20))
 })
@@ -87,12 +93,14 @@ theme(plot.title = element_text(hjust = 0.5, size=20))
 renderPlot({
 A <- data[,-1]
 B <- data[,-length(data)]
-diff <- A/B 
+zeros <- integer(length(counties))
+diff <- cbind(zeros, A/B)
 diff[is.na(diff) | diff=="Inf"] <- 0
 diff <- diff - 1
 diff[diff==-1] <- 0
+diff[,1] <- NA
 cases <- as.matrix(diff)[input$county,]
-dates <- seq(as.Date("2000/03/10"), by = "days", length.out = length(cases))
+dates <- seq(as.Date("2000/03/09"), by = "days", length.out = length(cases))
 df <- data.frame(dates,cases)
 last_point <- df %>% # most recent value
   slice(which.max(dates))
@@ -103,6 +111,7 @@ labs(x = "Date", y = paste(input$county,  "Covid-19 Cases"), title = paste(input
 scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") + 
 scale_y_continuous(labels = scales::percent) +
 theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
+geom_vline(data=df, xintercept=as.numeric(dates[15]), linetype=2) +
 bbc_style() +
 theme(plot.title = element_text(hjust = 0.5, size=20))
 })
@@ -110,7 +119,7 @@ theme(plot.title = element_text(hjust = 0.5, size=20))
 
 ## Scotland Health Board Covid-19 Data
 
-As of April 7th 2020, this data is up-to-date with the official figures released by the Scottish Government.
+As of April 28th 2020, this data is up-to-date with the official figures released by the Scottish Government.
 
 Select your health board from the drop-down menu:
 ```{r scottish_eruptions, echo=FALSE}
@@ -127,6 +136,7 @@ dates <- seq(as.Date("2000/03/09"), by = "days", length.out = length(scottish_da
 df <- data.frame(dates,cases)
 last_point <- df %>% # most recent value
   slice(which.max(dates))
+ypos = max(cases) - 0.005*diff(range(cases)) 
 ggplot(df, aes(x = dates, y = cases)) +
 geom_line(colour = "#007f7f", size = 1) +
 geom_hline(yintercept = 0, size = 1, colour="#333333") +
@@ -135,6 +145,8 @@ scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") +
 theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
 geom_point(data = last_point, aes(x = dates, y = cases), col = "#007f7f", shape = 21, fill = "white", size = 2, stroke = 1.7) +
 geom_text(data = last_point, aes(x = dates, y = cases, label = cases), size = 6, vjust = 2.0, nudge_x = 0.5) +
+geom_vline(data=df, xintercept=as.numeric(dates[15]), linetype=2) +
+annotate(geom="label", x=dates[15], label="UK lockdown begins", y=ypos, fontface="italic", colour="grey10", hjust=1.03, vjust=1, size=5) +
 bbc_style() +
 theme(plot.title = element_text(hjust = 0.5, size=20))
 })
@@ -153,15 +165,18 @@ geom_hline(yintercept = 0, size = 2, colour="#333333") +
 theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
 geom_point(data = last_point, aes(x = dates, y = cases), col = "#007f7f", shape = 21, fill = "white", size = 2, stroke = 1.7) +
 geom_text(data = last_point, aes(x = dates, y = cases, label = cases), size = 6, vjust = 2.0, nudge_x = 0.5) +
+geom_vline(data=df, xintercept=as.numeric(dates[15]), linetype=2) +
 bbc_style() +
 theme(plot.title = element_text(hjust = 0.5, size=20))
 })
+
 renderPlot({
 A <- scottish_data[,-1]
 B <- scottish_data[,-length(scottish_data)]
-diff <- A-B
+zeros <- integer(length(scottish_counties))
+diff <- cbind(zeros, A-B)
 cases <- as.matrix(diff)[input$region,]
-dates <- seq(as.Date("2000/03/10"), by = "days", length.out = length(cases))
+dates <- seq(as.Date("2000/03/09"), by = "days", length.out = length(cases))
 df <- data.frame(dates,cases)
 last_point <- df %>% # most recent value
   slice(which.max(dates))
@@ -171,6 +186,7 @@ geom_hline(yintercept = 0, size = 1, colour="#333333") +
 labs(x = "Date", y = paste(input$region,  "Covid-19 Cases"), title = paste(input$region,  "Daily Covid-19 Cases")) +
 scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") + 
 theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
+geom_vline(data=df, xintercept=as.numeric(dates[15]), linetype=2) +
 bbc_style() +
 theme(plot.title = element_text(hjust = 0.5, size=20))
 })
@@ -178,12 +194,14 @@ theme(plot.title = element_text(hjust = 0.5, size=20))
 renderPlot({
 A <- scottish_data[,-1]
 B <- scottish_data[,-length(scottish_data)]
-diff <- A/B 
+zeros <- integer(length(scottish_counties))
+diff <- cbind(zeros, A/B)
 diff[is.na(diff) | diff=="Inf"] <- 0
 diff <- diff - 1
 diff[diff==-1] <- 0
+diff[,1] <- NA
 cases <- as.matrix(diff)[input$region,]
-dates <- seq(as.Date("2000/03/10"), by = "days", length.out = length(cases))
+dates <- seq(as.Date("2000/03/09"), by = "days", length.out = length(cases))
 df <- data.frame(dates,cases)
 last_point <- df %>% # most recent value
   slice(which.max(dates))
@@ -194,6 +212,7 @@ labs(x = "Date", y = paste(input$region,  "Covid-19 Cases"), title = paste(input
 scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") + 
 scale_y_continuous(labels = scales::percent) +
 theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
+geom_vline(data=df, xintercept=as.numeric(dates[15]), linetype=2) +
 bbc_style() +
 theme(plot.title = element_text(hjust = 0.5, size=20))
 })
@@ -201,7 +220,7 @@ theme(plot.title = element_text(hjust = 0.5, size=20))
 
 ## Wales Health Board Covid-19 Data
 
-As of April 7th 2020, this data is up-to-date with the official figures released by Public Health Wales.
+As of April 28th 2020, this data is up-to-date with the official figures released by Public Health Wales.
 
 Select your health board from the drop-down menu:
 ```{r welsh_eruptions, echo=FALSE}
@@ -218,6 +237,7 @@ dates <- seq(as.Date("2000/03/20"), by = "days", length.out = length(welsh_data[
 df <- data.frame(dates,cases)
 last_point <- df %>% # most recent value
   slice(which.max(dates))
+ypos = max(cases) - 0.005*diff(range(cases))
 ggplot(df, aes(x = dates, y = cases)) +
 geom_line(colour = "#007f7f", size = 1) +
 geom_hline(yintercept = 0, size = 1, colour="#333333") +
@@ -226,9 +246,12 @@ scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") +
 theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
 geom_point(data = last_point, aes(x = dates, y = cases), col = "#007f7f", shape = 21, fill = "white", size = 2, stroke = 1.7) +
 geom_text(data = last_point, aes(x = dates, y = cases, label = cases), size = 6, vjust = 2.0, nudge_x = 0.5) +
+geom_vline(data=df, xintercept=as.numeric(dates[4]), linetype=2) +
+annotate(geom="label", x=dates[4], label="UK lockdown begins", y=ypos, fontface="italic", colour="grey10", hjust=-0.03, vjust=1, size=5) +
 bbc_style() +
 theme(plot.title = element_text(hjust = 0.5, size=20))
 })
+
 renderPlot({
 cases <- as.matrix(welsh_data)[input$welsh_region,]
 dates <- seq(as.Date("2000/03/20"), by = "days", length.out = length(welsh_data[input$welsh_region,]))
@@ -244,15 +267,17 @@ geom_hline(yintercept = 0, size = 2, colour="#333333") +
 theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
 geom_point(data = last_point, aes(x = dates, y = cases), col = "#007f7f", shape = 21, fill = "white", size = 2, stroke = 1.7) +
 geom_text(data = last_point, aes(x = dates, y = cases, label = cases), size = 6, vjust = 2.0, nudge_x = 0.5) +
+geom_vline(data=df, xintercept=as.numeric(dates[4]), linetype=2) +
 bbc_style() +
 theme(plot.title = element_text(hjust = 0.5, size=20))
 })
 renderPlot({
 A <- welsh_data[,-1]
 B <- welsh_data[,-length(welsh_data)]
-diff <- A-B
+zeros <- integer(length(welsh_counties))
+diff <- cbind(zeros, A-B)
 cases <- as.matrix(diff)[input$welsh_region,]
-dates <- seq(as.Date("2000/03/21"), by = "days", length.out = length(cases))
+dates <- seq(as.Date("2000/03/20"), by = "days", length.out = length(cases))
 df <- data.frame(dates,cases)
 last_point <- df %>% # most recent value
   slice(which.max(dates))
@@ -262,6 +287,7 @@ geom_hline(yintercept = 0, size = 1, colour="#333333") +
 labs(x = "Date", y = paste(input$welsh_region,  "Covid-19 Cases"), title = paste(input$welsh_region,  "Daily Covid-19 Cases")) +
 scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") + 
 theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
+geom_vline(data=df, xintercept=as.numeric(dates[4]), linetype=2) +
 bbc_style() +
 theme(plot.title = element_text(hjust = 0.5, size=20))
 })
@@ -269,12 +295,14 @@ theme(plot.title = element_text(hjust = 0.5, size=20))
 renderPlot({
 A <- welsh_data[,-1]
 B <- welsh_data[,-length(welsh_data)]
-diff <- A/B 
+zeros <- integer(length(welsh_counties))
+diff <- cbind(zeros, A/B)
 diff[is.na(diff) | diff=="Inf"] <- 0
 diff <- diff - 1
 diff[diff==-1] <- 0
+diff[,1] <- NA
 cases <- as.matrix(diff)[input$welsh_region,]
-dates <- seq(as.Date("2000/03/21"), by = "days", length.out = length(cases))
+dates <- seq(as.Date("2000/03/20"), by = "days", length.out = length(cases))
 df <- data.frame(dates,cases)
 last_point <- df %>% # most recent value
   slice(which.max(dates))
@@ -285,6 +313,7 @@ labs(x = "Date", y = paste(input$welsh_region,  "Covid-19 Cases"), title = paste
 scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") + 
 scale_y_continuous(labels = scales::percent) +
 theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
+geom_vline(data=df, xintercept=as.numeric(dates[4]), linetype=2) +
 bbc_style() +
 theme(plot.title = element_text(hjust = 0.5, size=20))
 })
