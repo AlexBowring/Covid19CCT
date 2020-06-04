@@ -14,7 +14,15 @@ All Covid-19 data for English counties has been sourced from the UK Department o
 
 ## England County Covid-19 Data (Scotland, Wales Below)
 
-As of April 28th 2020, this data is up-to-date with the official figures released by the UK Department of Health and Social Care.
+As of June 4th 2020, this data is up-to-date with the official figures released by the UK Department of Health and Social Care.
+
+**On May 30th, the Department of Health and Social Care removed a considerable number of cases from the data. The reason for this has been given on their website as: ** 
+
+***'... it has been identified that a group of test results from the previous 2 months, from a single NHS laboratory, were incorrectly reported to the national data-set as positive. Only a small proportion (<1%) of cases has been removed from the cumulative England total, but for some areas in the West Midlands (the region affected by this data correction), the proportions of cases removed will be greater.'***
+
+**This may explain a large drop in cases for West Midlands counties seen in the plots below (for example, Birmingham) on May 30th.**
+
+**On May 31st, it seems these figures were revised downwards again. It is currently not been made clear why.**
 
 Select your county from the drop-down menu:
 ```{r eruptions, echo=FALSE}
@@ -119,7 +127,7 @@ theme(plot.title = element_text(hjust = 0.5, size=20))
 
 ## Scotland Health Board Covid-19 Data
 
-As of April 28th 2020, this data is up-to-date with the official figures released by the Scottish Government.
+As of June 4th 2020, this data is up-to-date with the official figures released by the Scottish Government.
 
 Select your health board from the drop-down menu:
 ```{r scottish_eruptions, echo=FALSE}
@@ -220,7 +228,7 @@ theme(plot.title = element_text(hjust = 0.5, size=20))
 
 ## Wales Health Board Covid-19 Data
 
-As of April 28th 2020, this data is up-to-date with the official figures released by Public Health Wales.
+As of June 4th 2020, this data is up-to-date with the official figures released by Public Health Wales.
 
 Select your health board from the drop-down menu:
 ```{r welsh_eruptions, echo=FALSE}
