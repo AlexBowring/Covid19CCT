@@ -14,7 +14,7 @@ All Covid-19 data for English counties has been sourced from the UK Department o
 
 ## England County Covid-19 Data (Scotland, Wales Below)
 
-As of June 4th 2020, this data is up-to-date with the official figures released by the UK Department of Health and Social Care.
+As of June 7th 2020, this data is up-to-date with the official figures released by the UK Department of Health and Social Care.
 
 **On May 30th, the Department of Health and Social Care removed a considerable number of cases from the data. The reason for this has been given on their website as: ** 
 
@@ -29,17 +29,40 @@ Select your county from the drop-down menu:
 library(dplyr, warn.conflict = FALSE)
 library(ggplot2, warn.conflict = FALSE)
 library(bbplot, warn.conflict = FALSE)
-data <- read.csv("covid_data.csv", row.names=1)
-counties <- sort(row.names(data))
+library(tidyr, warn.conflict = FALSE)
+path_eng <- "https://coronavirus.data.gov.uk/downloads/csv/coronavirus-cases_latest.csv"
+eng_cases <- suppressMessages(readr::read_csv(file = path_eng)) %>%
+filter(`Area type` == "Upper tier local authority") %>%
+mutate(date = lubridate::ymd(`Specimen date`)) %>%
+select(date, region = "Area name", cases = "Cumulative lab-confirmed cases") %>%
+arrange(date)
+
+counties <- sort(unique(eng_cases$region))
 selectInput(
   'county', label = 'County:',
   choices = counties, selected = "Oxfordshire"
 )
 
 renderPlot({
-cases <- as.matrix(data)[input$county,]
-dates <- seq(as.Date("2000/03/09"), by = "days", length.out = length(data[input$county,]))
-df <- data.frame(dates,cases)
+cases <- eng_cases %>%
+  rename(local = cases) %>%
+  mutate(imported = 0) 
+
+cases <- data.table::as.data.table(cases)
+
+cases <- cases[region==input$county]
+
+full_cases <- cases %>%
+  complete(date = seq.Date(min(date), max(date), by="day")) %>%
+  fill(`region`) %>%
+  fill(`local`) %>% 
+  filter(date >= "2020-03-09")
+
+cases <- full_cases$local
+
+dates <- seq.Date(min(full_cases$date), max(full_cases$date), by = "day")
+
+df <- data.frame(dates,cases) 
 last_point <- df %>% # most recent value
   slice(which.max(dates))
 ypos = max(cases) - 0.005*diff(range(cases))
@@ -47,43 +70,79 @@ ggplot(df, aes(x = dates, y = cases)) +
 geom_line(colour = "#007f7f", size = 1) +
 geom_hline(yintercept = 0, size = 1, colour="#333333") +
 labs(x = "Date", y = paste(input$county,  "Covid-19 Cases"), title = paste(input$county,  "Total Covid-19 Cases (Linear Scale)")) +
-scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") + 
+scale_x_date(date_breaks = "4 days", date_labels = "%d/%m") + 
 theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
 geom_point(data = last_point, aes(x = dates, y = cases), col = "#007f7f", shape = 21, fill = "white", size = 2, stroke = 1.7) +
 geom_text(data = last_point, aes(x = dates, y = cases, label = cases), size = 6, vjust = 2.0, nudge_x = 0.5) +
-geom_vline(data=df, xintercept=as.numeric(dates[15]), linetype=2) +
-annotate(geom="label", x=dates[15], label="UK lockdown begins", y=ypos, fontface="italic", colour="grey10", hjust=1.03, vjust=1, size=5) +
+geom_vline(data=df, xintercept=as.numeric(dates[dates=="2020-03-23"]), linetype=2) +
+annotate(geom="label", x=dates[dates=="2020-03-23"], label="UK lockdown begins", y=ypos, fontface="italic", colour="grey10", hjust=1.03, vjust=1, size=5) +
 bbc_style() +
 theme(plot.title = element_text(hjust = 0.5, size=20))
 })
 
 renderPlot({
-cases <- as.matrix(data)[input$county,]
-dates <- seq(as.Date("2000/03/09"), by = "days", length.out = length(data[input$county,]))
-df <- data.frame(dates,cases)
+cases <- eng_cases %>%
+  rename(local = cases) %>%
+  mutate(imported = 0) 
+
+cases <- data.table::as.data.table(cases)
+
+cases <- cases[region==input$county]
+
+full_cases <- cases %>%
+  complete(date = seq.Date(min(date), max(date), by="day")) %>%
+  fill(`region`) %>%
+  fill(`local`) %>% 
+  filter(date >= "2020-03-09")
+
+cases <- full_cases$local
+
+dates <- seq.Date(min(full_cases$date), max(full_cases$date), by = "day")
+
+df <- data.frame(dates,cases) 
 last_point <- df %>% # most recent value
   slice(which.max(dates))
 ggplot(df, aes(x = dates, y = cases)) +
 geom_line(colour = "#007f7f", size = 1) +
 labs(x = "Date", y = paste(input$county,  "Covid-19 Cases"), title = paste(input$county,  "Total Covid-19 Cases (Logarithmic Scale)")) +
-scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") + 
+scale_x_date(date_breaks = "4 days", date_labels = "%d/%m") + 
 scale_y_continuous(trans = 'log2') +
 geom_hline(yintercept = 0, size = 2, colour="#333333") +
 theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
 geom_point(data = last_point, aes(x = dates, y = cases), col = "#007f7f", shape = 21, fill = "white", size = 2, stroke = 1.7) +
 geom_text(data = last_point, aes(x = dates, y = cases, label = cases), size = 6, vjust = 2.0, nudge_x = 0.5) +
-geom_vline(data=df, xintercept=as.numeric(dates[15]), linetype=2) +
+geom_vline(data=df, xintercept=as.numeric(dates[dates=="2020-03-23"]), linetype=2) +
 bbc_style() +
 theme(plot.title = element_text(hjust = 0.5, size=20))
 })
 
 renderPlot({
-A <- data[,-1]
-B <- data[,-length(data)]
-zeros <- integer(length(counties))
-diff <- cbind(zeros, A-B)
-cases <- as.matrix(diff)[input$county,]
-dates <- seq(as.Date("2000/03/09"), by = "days", length.out = length(cases))
+cases <- eng_cases %>%
+  rename(local = cases) %>%
+  mutate(imported = 0) 
+
+cases <- data.table::as.data.table(cases)
+
+cases <- cases[region==input$county]
+
+full_cases <- cases %>%
+  complete(date = seq.Date(min(date), max(date), by="day")) %>%
+  fill(`region`) %>%
+  fill(`local`) %>% 
+  filter(date >= "2020-03-09")
+
+cases <- full_cases$local
+
+dates <- seq.Date(min(full_cases$date), max(full_cases$date), by = "day")
+
+A <- cases[-1]
+B <- cases[-length(cases)]
+diff <- c(0, A-B)
+diff[diff==-1] <- 0
+diff[1] <- NA
+
+cases <- diff
+
 df <- data.frame(dates,cases)
 last_point <- df %>% # most recent value
   slice(which.max(dates))
@@ -91,24 +150,40 @@ ggplot(df, aes(x = dates, y = cases)) +
 geom_bar(stat="identity",colour = "white",fill="steelblue") +
 geom_hline(yintercept = 0, size = 1, colour="#333333") +
 labs(x = "Date", y = paste(input$county,  "Covid-19 Cases"), title = paste(input$county,  "Daily Covid-19 Cases")) +
-scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") + 
+scale_x_date(date_breaks = "4 days", date_labels = "%d/%m") + 
 theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
-geom_vline(data=df, xintercept=as.numeric(dates[15]), linetype=2) +
+geom_vline(data=df, xintercept=as.numeric(dates[dates=="2020-03-23"]), linetype=2) +
 bbc_style() +
 theme(plot.title = element_text(hjust = 0.5, size=20))
 })
 
 renderPlot({
-A <- data[,-1]
-B <- data[,-length(data)]
-zeros <- integer(length(counties))
-diff <- cbind(zeros, A/B)
+cases <- eng_cases %>%
+  rename(local = cases) %>%
+  mutate(imported = 0) 
+
+cases <- data.table::as.data.table(cases)
+
+cases <- cases[region==input$county]
+
+full_cases <- cases %>%
+  complete(date = seq.Date(min(date), max(date), by="day")) %>%
+  fill(`region`) %>%
+  fill(`local`) %>% 
+  filter(date >= "2020-03-09")
+
+cases <- full_cases$local
+
+dates <- seq.Date(min(full_cases$date), max(full_cases$date), by = "day")
+
+A <- cases[-1]
+B <- cases[-length(cases)]
+diff <- c(0, A/B)
 diff[is.na(diff) | diff=="Inf"] <- 0
 diff <- diff - 1
 diff[diff==-1] <- 0
-diff[,1] <- NA
-cases <- as.matrix(diff)[input$county,]
-dates <- seq(as.Date("2000/03/09"), by = "days", length.out = length(cases))
+diff[1] <- NA
+cases <- diff
 df <- data.frame(dates,cases)
 last_point <- df %>% # most recent value
   slice(which.max(dates))
@@ -116,10 +191,10 @@ ggplot(df, aes(x = dates, y = cases)) +
 geom_line(colour = "#007f7f", size = 1) +
 geom_hline(yintercept = 0, size = 1, colour="#333333") +
 labs(x = "Date", y = paste(input$county,  "Covid-19 Cases"), title = paste(input$county,  "Daily % Change (On Previous Day's Total)")) +
-scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") + 
+scale_x_date(date_breaks = "4 days", date_labels = "%d/%m") + 
 scale_y_continuous(labels = scales::percent) +
 theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
-geom_vline(data=df, xintercept=as.numeric(dates[15]), linetype=2) +
+geom_vline(data=df, xintercept=as.numeric(dates[dates=="2020-03-23"]), linetype=2) +
 bbc_style() +
 theme(plot.title = element_text(hjust = 0.5, size=20))
 })
@@ -127,7 +202,7 @@ theme(plot.title = element_text(hjust = 0.5, size=20))
 
 ## Scotland Health Board Covid-19 Data
 
-As of June 4th 2020, this data is up-to-date with the official figures released by the Scottish Government.
+As of June 7th 2020, this data is up-to-date with the official figures released by the Scottish Government.
 
 Select your health board from the drop-down menu:
 ```{r scottish_eruptions, echo=FALSE}
@@ -140,7 +215,7 @@ selectInput(
 
 renderPlot({
 cases <- as.matrix(scottish_data)[input$region,]
-dates <- seq(as.Date("2000/03/09"), by = "days", length.out = length(scottish_data[input$region,]))
+dates <- seq(as.Date("2020/03/09"), by = "days", length.out = length(scottish_data[input$region,]))
 df <- data.frame(dates,cases)
 last_point <- df %>% # most recent value
   slice(which.max(dates))
@@ -149,7 +224,7 @@ ggplot(df, aes(x = dates, y = cases)) +
 geom_line(colour = "#007f7f", size = 1) +
 geom_hline(yintercept = 0, size = 1, colour="#333333") +
 labs(x = "Date", y = paste(input$region,  "Covid-19 Cases"), title = paste(input$region,  "Total Covid-19 Cases (Linear Scale)")) +
-scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") + 
+scale_x_date(date_breaks = "4 days", date_labels = "%d/%m") + 
 theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
 geom_point(data = last_point, aes(x = dates, y = cases), col = "#007f7f", shape = 21, fill = "white", size = 2, stroke = 1.7) +
 geom_text(data = last_point, aes(x = dates, y = cases, label = cases), size = 6, vjust = 2.0, nudge_x = 0.5) +
@@ -160,14 +235,14 @@ theme(plot.title = element_text(hjust = 0.5, size=20))
 })
 renderPlot({
 cases <- as.matrix(scottish_data)[input$region,]
-dates <- seq(as.Date("2000/03/09"), by = "days", length.out = length(scottish_data[input$region,]))
+dates <- seq(as.Date("2020/03/09"), by = "days", length.out = length(scottish_data[input$region,]))
 df <- data.frame(dates,cases)
 last_point <- df %>% # most recent value
   slice(which.max(dates))
 ggplot(df, aes(x = dates, y = cases)) +
 geom_line(colour = "#007f7f", size = 1) +
 labs(x = "Date", y = paste(input$region,  "Covid-19 Cases"), title = paste(input$region,  "Total Covid-19 Cases (Logarithmic Scale)")) +
-scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") + 
+scale_x_date(date_breaks = "4 days", date_labels = "%d/%m") + 
 scale_y_continuous(trans = 'log2') +
 geom_hline(yintercept = 0, size = 2, colour="#333333") +
 theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
@@ -184,7 +259,7 @@ B <- scottish_data[,-length(scottish_data)]
 zeros <- integer(length(scottish_counties))
 diff <- cbind(zeros, A-B)
 cases <- as.matrix(diff)[input$region,]
-dates <- seq(as.Date("2000/03/09"), by = "days", length.out = length(cases))
+dates <- seq(as.Date("2020/03/09"), by = "days", length.out = length(cases))
 df <- data.frame(dates,cases)
 last_point <- df %>% # most recent value
   slice(which.max(dates))
@@ -192,7 +267,7 @@ ggplot(df, aes(x = dates, y = cases)) +
 geom_bar(stat="identity",colour = "white",fill="steelblue") +
 geom_hline(yintercept = 0, size = 1, colour="#333333") +
 labs(x = "Date", y = paste(input$region,  "Covid-19 Cases"), title = paste(input$region,  "Daily Covid-19 Cases")) +
-scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") + 
+scale_x_date(date_breaks = "4 days", date_labels = "%d/%m") + 
 theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
 geom_vline(data=df, xintercept=as.numeric(dates[15]), linetype=2) +
 bbc_style() +
@@ -209,7 +284,7 @@ diff <- diff - 1
 diff[diff==-1] <- 0
 diff[,1] <- NA
 cases <- as.matrix(diff)[input$region,]
-dates <- seq(as.Date("2000/03/09"), by = "days", length.out = length(cases))
+dates <- seq(as.Date("2020/03/09"), by = "days", length.out = length(cases))
 df <- data.frame(dates,cases)
 last_point <- df %>% # most recent value
   slice(which.max(dates))
@@ -217,7 +292,7 @@ ggplot(df, aes(x = dates, y = cases)) +
 geom_line(colour = "#007f7f", size = 1) +
 geom_hline(yintercept = 0, size = 1, colour="#333333") +
 labs(x = "Date", y = paste(input$region,  "Covid-19 Cases"), title = paste(input$region,  "Daily % Change (On Previous Day's Total)")) +
-scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") + 
+scale_x_date(date_breaks = "4 days", date_labels = "%d/%m") + 
 scale_y_continuous(labels = scales::percent) +
 theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
 geom_vline(data=df, xintercept=as.numeric(dates[15]), linetype=2) +
@@ -228,7 +303,7 @@ theme(plot.title = element_text(hjust = 0.5, size=20))
 
 ## Wales Health Board Covid-19 Data
 
-As of June 4th 2020, this data is up-to-date with the official figures released by Public Health Wales.
+As of June 7th 2020, this data is up-to-date with the official figures released by Public Health Wales.
 
 Select your health board from the drop-down menu:
 ```{r welsh_eruptions, echo=FALSE}
@@ -241,7 +316,7 @@ selectInput(
 
 renderPlot({
 cases <- as.matrix(welsh_data)[input$welsh_region,]
-dates <- seq(as.Date("2000/03/20"), by = "days", length.out = length(welsh_data[input$welsh_region,]))
+dates <- seq(as.Date("2020/03/20"), by = "days", length.out = length(welsh_data[input$welsh_region,]))
 df <- data.frame(dates,cases)
 last_point <- df %>% # most recent value
   slice(which.max(dates))
@@ -250,7 +325,7 @@ ggplot(df, aes(x = dates, y = cases)) +
 geom_line(colour = "#007f7f", size = 1) +
 geom_hline(yintercept = 0, size = 1, colour="#333333") +
 labs(x = "Date", y = paste(input$welsh_region,  "Covid-19 Cases"), title = paste(input$welsh_region,  "Total Covid-19 Cases (Linear Scale)")) +
-scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") + 
+scale_x_date(date_breaks = "4 days", date_labels = "%d/%m") + 
 theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
 geom_point(data = last_point, aes(x = dates, y = cases), col = "#007f7f", shape = 21, fill = "white", size = 2, stroke = 1.7) +
 geom_text(data = last_point, aes(x = dates, y = cases, label = cases), size = 6, vjust = 2.0, nudge_x = 0.5) +
@@ -262,14 +337,14 @@ theme(plot.title = element_text(hjust = 0.5, size=20))
 
 renderPlot({
 cases <- as.matrix(welsh_data)[input$welsh_region,]
-dates <- seq(as.Date("2000/03/20"), by = "days", length.out = length(welsh_data[input$welsh_region,]))
+dates <- seq(as.Date("2020/03/20"), by = "days", length.out = length(welsh_data[input$welsh_region,]))
 df <- data.frame(dates,cases)
 last_point <- df %>% # most recent value
   slice(which.max(dates))
 ggplot(df, aes(x = dates, y = cases)) +
 geom_line(colour = "#007f7f", size = 1) +
 labs(x = "Date", y = paste(input$welsh_region,  "Covid-19 Cases"), title = paste(input$welsh_region,  "Total Covid-19 Cases (Logarithmic Scale)")) +
-scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") + 
+scale_x_date(date_breaks = "4 days", date_labels = "%d/%m") + 
 scale_y_continuous(trans = 'log2') +
 geom_hline(yintercept = 0, size = 2, colour="#333333") +
 theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
@@ -285,7 +360,7 @@ B <- welsh_data[,-length(welsh_data)]
 zeros <- integer(length(welsh_counties))
 diff <- cbind(zeros, A-B)
 cases <- as.matrix(diff)[input$welsh_region,]
-dates <- seq(as.Date("2000/03/20"), by = "days", length.out = length(cases))
+dates <- seq(as.Date("2020/03/20"), by = "days", length.out = length(cases))
 df <- data.frame(dates,cases)
 last_point <- df %>% # most recent value
   slice(which.max(dates))
@@ -293,7 +368,7 @@ ggplot(df, aes(x = dates, y = cases)) +
 geom_bar(stat="identity",colour = "white",fill="steelblue") +
 geom_hline(yintercept = 0, size = 1, colour="#333333") +
 labs(x = "Date", y = paste(input$welsh_region,  "Covid-19 Cases"), title = paste(input$welsh_region,  "Daily Covid-19 Cases")) +
-scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") + 
+scale_x_date(date_breaks = "4 days", date_labels = "%d/%m") + 
 theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
 geom_vline(data=df, xintercept=as.numeric(dates[4]), linetype=2) +
 bbc_style() +
@@ -310,7 +385,7 @@ diff <- diff - 1
 diff[diff==-1] <- 0
 diff[,1] <- NA
 cases <- as.matrix(diff)[input$welsh_region,]
-dates <- seq(as.Date("2000/03/20"), by = "days", length.out = length(cases))
+dates <- seq(as.Date("2020/03/20"), by = "days", length.out = length(cases))
 df <- data.frame(dates,cases)
 last_point <- df %>% # most recent value
   slice(which.max(dates))
@@ -318,7 +393,7 @@ ggplot(df, aes(x = dates, y = cases)) +
 geom_line(colour = "#007f7f", size = 1) +
 geom_hline(yintercept = 0, size = 1, colour="#333333") +
 labs(x = "Date", y = paste(input$welsh_region,  "Covid-19 Cases"), title = paste(input$welsh_region,  "Daily % Change (On Previous Day's Total)")) +
-scale_x_date(date_breaks = "3 days", date_labels = "%d/%m") + 
+scale_x_date(date_breaks = "4 days", date_labels = "%d/%m") + 
 scale_y_continuous(labels = scales::percent) +
 theme(axis.text.x = element_text(angle = 90, vjust=0.5, hjust=1)) +
 geom_vline(data=df, xintercept=as.numeric(dates[4]), linetype=2) +
